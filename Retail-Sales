@@ -1,0 +1,88 @@
+USE sharkie_database.retail_sales
+
+--This data set is clean. We've already cleaned, but just in case, we will check for null values.
+
+SELECT 
+  SUM(CASE WHEN `Transaction ID` IS NULL THEN 1 ELSE 0 END) AS transaction_id_nulls,
+  SUM(CASE WHEN `Date` IS NULL THEN 1 ELSE 0 END) AS date_nulls,
+  SUM(CASE WHEN `Customer ID` IS NULL THEN 1 ELSE 0 END) AS customer_id_nulls,
+  SUM(CASE WHEN `Gender` IS NULL THEN 1 ELSE 0 END) AS gender_nulls,
+  SUM(CASE WHEN `Age` IS NULL THEN 1 ELSE 0 END) AS age_nulls,
+  SUM(CASE WHEN `Product Category` IS NULL THEN 1 ELSE 0 END) AS product_category_nulls,
+  SUM(CASE WHEN `Quantity` IS NULL THEN 1 ELSE 0 END) AS quantity_nulls,
+  SUM(CASE WHEN `Price per Unit` IS NULL THEN 1 ELSE 0 END) AS price_per_unit_nulls,
+  SUM(CASE WHEN `Total Amount` IS NULL THEN 1 ELSE 0 END) AS total_amount_nulls
+FROM sharkie_database.retail_sales;
+
+--Let’s now get a feel for the dataset by viewing a few sample rows. 
+
+SELECT * 
+FROM sharkie_database.retail_sales
+LIMIT 10;
+
+--We will also use the describe function to explore a little further:
+
+DESCRIBE sharkie_database.retail_sales
+
+--Now we can do some analysis.
+--Which product categories generate the highest total revenue?
+
+SELECT 
+  `Product Category`, 
+  SUM(`Total Amount`) AS total_revenue
+FROM sharkie_database.retail_sales
+GROUP BY `Product Category`
+ORDER BY total_revenue DESC;
+
+--How does customer spending vary by gender and age group?
+--First by gender:
+
+SELECT 
+  Gender, 
+  AVG(`Total Amount`) AS avg_spending
+FROM sharkie_database.retail_sales
+GROUP BY Gender;
+
+--Then by age:
+SELECT 
+  CASE
+    WHEN Age < 20 THEN 'Under 20'
+    WHEN Age BETWEEN 20 AND 29 THEN '20-29'
+    WHEN Age BETWEEN 30 AND 39 THEN '30-39'
+    WHEN Age BETWEEN 40 AND 49 THEN '40-49'
+    WHEN Age BETWEEN 50 AND 59 THEN '50-59'
+    ELSE '60+'
+  END AS age_group,
+  AVG(`Total Amount`) AS avg_spending
+FROM sharkie_database.retail_sales
+GROUP BY age_group
+ORDER BY avg_spending desc
+
+--Now we take a look at monthly sales trends: 
+
+SELECT 
+  DATE_FORMAT(`Date`, '%Y-%m') AS month,
+  SUM(`Total Amount`) AS total_sales
+FROM sharkie_database.retail_sales
+GROUP BY month
+ORDER BY total_sales desc;
+
+--What is the average order size? We will look at the average quantity per order and the average dollar amount per order.
+
+SELECT 
+  `Product Category`,
+  AVG(Quantity) AS avg_quantity_per_order,
+  AVG(`Total Amount`) AS avg_dollar_per_order
+FROM sharkie_database.retail_sales
+GROUP BY `Product Category`
+ORDER BY avg_dollar_per_order DESC;
+
+--Who are the top 10 highest spending customers? 
+
+SELECT 
+  `Customer ID`, 
+  SUM(`Total Amount`) AS total_spent
+FROM sharkie_database.retail_sales
+GROUP BY `Customer ID`
+ORDER BY total_spent DESC
+LIMIT 10;
